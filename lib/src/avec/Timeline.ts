@@ -1,3 +1,5 @@
+type playbackEvents = "play" | "pause" | "stop";
+
 export default class Timeline {
   private _start: number;
   private _end: number;
@@ -6,9 +8,12 @@ export default class Timeline {
   private _current: number;
   private _playback: boolean;
   private _timeListener: (time: number) => void;
-  private _playbackListener: (paused: boolean) => void;
+  private _playbackListener: (event: playbackEvents, time: number) => void;
+
   private __timeToSubtract: number;
   private __animationId: number;
+  private __timeTillFirstPlay: number;
+  private __firstPlay: boolean;
 
   constructor(length: number) {
     this._start = 0;
@@ -17,18 +22,37 @@ export default class Timeline {
     this._loop = true;
     this._current = 0;
     this._playback = false;
+
     this.__timeToSubtract = 0;
+    this.__firstPlay = false;
+    this.__timeTillFirstPlay = new Date().getTime();
   }
 
   get t() {
     return this._current;
   }
 
+  get end() {
+    return this._end;
+  }
+
+  setStart(time: number) {
+    this._start = time;
+  }
+
+  setEnd(time: number) {
+    this._end = time;
+  }
+
   /**
    * starts playback of the timeline
    */
   play() {
-    if (this._playbackListener) this._playbackListener(false); //isnt paused
+    if (!this.__firstPlay) {
+      this.__timeToSubtract = new Date().getTime() - this.__timeTillFirstPlay;
+      this.__firstPlay = true;
+    }
+    if (this._playbackListener) this._playbackListener("play", this._current); //isnt paused
     this._playback = true;
     if (!this.__animationId) {
       this.__animationId = requestAnimationFrame((time) => this.update(time));
@@ -39,7 +63,13 @@ export default class Timeline {
    * pauses playback of the timeline
    */
   pause() {
-    if (this._playbackListener) this._playbackListener(true); //is paused
+    if (this._playbackListener) this._playbackListener("pause", this._current); //is paused
+    this._playback = false;
+  }
+
+  stop() {
+    this._current = this._start;
+    if (this._playbackListener) this._playbackListener("stop", this._current); //is paused
     this._playback = false;
   }
 
@@ -47,7 +77,7 @@ export default class Timeline {
    * define an action for when _playback changing
    * @param action
    */
-  onPlayback(action: (paused: boolean) => void) {
+  onPlaybackChange(action: (event: playbackEvents, time: number) => void) {
     this._playbackListener = action;
   }
 
