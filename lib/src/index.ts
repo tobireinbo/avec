@@ -5,16 +5,26 @@ let engine = new KeyframeEngine(timeline);
 
 const time = document.getElementById("time");
 const bar = document.getElementById("test");
+const playpauseBtn = document.getElementById("playpause");
 
-document.getElementById("play").addEventListener("click", () => {
-  timeline.play();
+let isPlay = true;
+
+playpauseBtn.addEventListener("click", () => {
+  if (isPlay) {
+    timeline.play();
+    isPlay = false;
+    playpauseBtn.innerText = "pause";
+  } else {
+    timeline.pause();
+    isPlay = true;
+    playpauseBtn.innerText = "play";
+  }
 });
-document.getElementById("pause").addEventListener("click", () => {
-  timeline.pause();
-  timeline.setStart(3000);
-});
+
 document.getElementById("stop").addEventListener("click", () => {
   timeline.stop();
+  isPlay = true;
+  playpauseBtn.innerText = "play";
 });
 
 timeline.onUpdate((t) => {
@@ -23,9 +33,9 @@ timeline.onUpdate((t) => {
   console.log(step);
   bar.setAttribute("x", step + "");
 });
-timeline.onPlaybackChange((event, time) => {
+timeline.onPlaybackChange((event, t) => {
+  let step = Math.floor((t / timeline.end) * 800);
   if (event === "stop") {
-    bar.setAttribute("x", 0 + "");
+    bar.setAttribute("x", step + "");
   }
-  console.log("on playback change", time);
 });
