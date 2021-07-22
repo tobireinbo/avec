@@ -1,23 +1,19 @@
-import { KeyframeEngine, Timeline } from "./KeyframeEngine";
+import { KeyframeEngine, Timeline } from "./avec/avec";
 
-let timeline = new Timeline(3000);
+let timeline = new Timeline(6000);
 let engine = new KeyframeEngine(timeline);
 
 const time = document.getElementById("time");
 
-document.getElementById("init").addEventListener("click", () => {
-  timeline.init();
+document.getElementById("play").addEventListener("click", () => {
+  timeline.play();
 });
 document.getElementById("pause").addEventListener("click", () => {
   timeline.pause();
-});
-document.getElementById("continue").addEventListener("click", () => {
-  timeline.continue();
 });
 
 timeline.onUpdate((t) => {
   time.innerText = "time: " + t;
 
-  //@ts-ignore
-  document.getElementById("test").setAttribute("cx", t * 0.01);
+  document.getElementById("test").setAttribute("cx", t * 0.01 + "");
 });
