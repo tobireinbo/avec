@@ -1,4 +1,12 @@
+import { v4 as uuidv4 } from "uuid";
+
 type playbackEvents = "play" | "pause" | "stop";
+
+type TimeListener = (time: number) => void;
+
+interface TimeListenerList {
+  [key: string]: TimeListener;
+}
 
 export default class Timeline {
   private _start: number;
@@ -7,13 +15,13 @@ export default class Timeline {
   private _loop: boolean;
   private _current: number;
   private _playback: boolean;
-  private _timeListener: (time: number) => void;
+  private _timeListeners: TimeListenerList;
   private _playbackListener: (event: playbackEvents, time: number) => void;
 
   private __timeToSubtract: number;
   private __animationId: number;
   private __timeTillFirstPlay: number;
-  private __firstPlay: boolean;
+  private __firstPlayed: boolean;
 
   constructor(length: number) {
     this._start = 0;
@@ -24,7 +32,7 @@ export default class Timeline {
     this._playback = false;
 
     this.__timeToSubtract = 0;
-    this.__firstPlay = false;
+    this.__firstPlayed = false;
     this.__timeTillFirstPlay = new Date().getTime();
   }
 
@@ -34,6 +42,10 @@ export default class Timeline {
 
   get end() {
     return this._end;
+  }
+
+  setTime(time: number) {
+    this._current = time;
   }
 
   setStart(time: number) {
@@ -48,9 +60,9 @@ export default class Timeline {
    * starts playback of the timeline
    */
   play() {
-    if (!this.__firstPlay) {
+    if (!this.__firstPlayed) {
       this.__timeToSubtract = new Date().getTime() - this.__timeTillFirstPlay;
-      this.__firstPlay = true;
+      this.__firstPlayed = true;
     }
     if (this._playbackListener) this._playbackListener("play", this._current); //isnt paused
     this._playback = true;
@@ -86,7 +98,7 @@ export default class Timeline {
    * @param action
    */
   onUpdate(action: (time: number) => void) {
-    this._timeListener = action;
+    this._timeListeners = { ...this._timeListeners, [uuidv4()]: action };
   }
 
   /**
@@ -100,7 +112,7 @@ export default class Timeline {
       if (this._playback) {
         let playbackTime = Math.floor(time - this.__timeToSubtract);
         this._current = playbackTime;
-        if (this._timeListener) this._timeListener(this._current);
+        if (this._timeListeners) this._triggerAllTimeListeners();
       } else {
         this.__timeToSubtract = time - this._current;
       }
@@ -112,5 +124,12 @@ export default class Timeline {
       }
     }
     this.__animationId = requestAnimationFrame((time) => this.update(time));
+  }
+
+  //triggers all listeners
+  private _triggerAllTimeListeners() {
+    Object.keys(this._timeListeners).forEach((key) => {
+      this._timeListeners[key](this._current);
+    });
   }
 }
