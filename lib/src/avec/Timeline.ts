@@ -83,6 +83,7 @@ export default class Timeline {
     this._current = this._start;
     if (this._playbackListener) this._playbackListener("stop", this._current); //is paused
     this._playback = false;
+    if (this._timeListeners) this._triggerAllTimeListeners();
   }
 
   /**

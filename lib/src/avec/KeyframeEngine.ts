@@ -2,8 +2,13 @@ import TWEEN from "@tweenjs/tween.js";
 import Timeline from "./Timeline";
 
 interface Keyframe {
-  time: number;
-  val: number;
+  to: { t: number; v: number };
+  from: { t: number; v: number };
+}
+
+interface _Keyframe {
+  t: number;
+  v: number;
 }
 
 interface KeyframeBind {
@@ -11,18 +16,23 @@ interface KeyframeBind {
   keyframes: Array<Keyframe>;
 }
 
-interface Element {
+interface SharedProps {
   id: string;
-  type: string;
-  pos: { x: number; y: number };
+  x: number;
+  y: number;
   scale: number;
   z: number;
   keyframes?: Array<KeyframeBind>;
+  elements?: Array<Element>;
+}
+interface Element extends SharedProps {
+  type: string;
+  backgroundColor?: string;
+  width?: number;
+  height?: number;
 }
 
-interface Layer extends Element {
-  elements: Array<Element>;
-}
+interface Layer extends SharedProps {}
 
 export default class KeyframeEngine {
   private _layers: Array<Layer>;
@@ -42,20 +52,26 @@ export default class KeyframeEngine {
 
   addLayer(layer: Layer) {
     this._layers.push(layer);
-    const currentEl = layer.elements[0];
-    const testElement = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      currentEl.type
-    );
 
-    testElement.setAttribute("id", "rec1");
-    testElement.setAttribute("width", 100 + "");
-    testElement.setAttribute("height", 80 + "");
-    testElement.setAttribute("x", 5 + "");
-    testElement.setAttribute("y", 5 + "");
-    testElement.style.fill = "rgb(0, 0, 255)";
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
-    this._svgElement.appendChild(testElement);
+    layer.elements.forEach((el) => {
+      const currentElement = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        el.type
+      );
+
+      currentElement.setAttribute("id", el.id);
+      currentElement.setAttribute("width", el.width + "");
+      currentElement.setAttribute("height", el.height + "");
+      currentElement.setAttribute("x", el.x + "");
+      currentElement.setAttribute("y", el.y + "");
+      currentElement.style.fill = el.backgroundColor;
+
+      group.appendChild(currentElement);
+    });
+
+    this._svgElement.appendChild(group);
     return this;
   }
 
@@ -65,10 +81,42 @@ export default class KeyframeEngine {
     return this._currentLayer;
   }
 
-  playLayers() {
+  play() {
     this._timeline.onUpdate((t) => {
-      console.log(t);
-      document.getElementById("rec1").setAttribute("x", t * 0.01 + "");
+      this._layers.forEach((layer) => {
+        layer.elements.forEach((el) => {
+          if (el.keyframes) {
+            const currentElement = document.getElementById(el.id);
+
+            el.keyframes.forEach((kfb) => {
+              kfb.keyframes.forEach((keyframe, index) => {
+                if (t <= keyframe.to.t && t >= keyframe.from.t) {
+                  const deltaT = Math.abs(keyframe.to.t - keyframe.from.t);
+                  const deltaV = Math.abs(keyframe.to.v - keyframe.from.v);
+                  const rate = deltaV / deltaT;
+
+                  if (rate !== 0) {
+                    let lastTime = 0;
+                    if (index > 0) {
+                      lastTime = kfb.keyframes[index - 1].to.t;
+                    }
+                    //WIP: can only go forward with keyframe
+                    const timeDiff = t - lastTime;
+                    const step =
+                      keyframe.from.v < keyframe.to.v
+                        ? Math.floor(rate * timeDiff)
+                        : Math.floor(rate * (this._timeline.end - timeDiff));
+
+                    console.log(step);
+                    el = { ...el, [kfb.prop]: step };
+                    currentElement.setAttribute(kfb.prop, step + "");
+                  }
+                }
+              });
+            });
+          }
+        });
+      });
     });
   }
 }

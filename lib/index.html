@@ -5,12 +5,21 @@
     <title>Webpack App</title>
   </head>
   <body>
-    <h4 id="time">time: 0</h4>
-    <button id="playpause">play</button>
-    <button id="stop">stop</button>
-    <svg width="800" height="40" style="background-color: lightgray">
-      <rect width="4" height="40" id="test" style="fill: rgb(255, 0, 0)" />
-    </svg>
-    <svg id="svg" width="200" height="200"></svg>
+    <div style="display: flex; flex-direction: column">
+      <div>
+        <h4 id="time">time: 0</h4>
+        <button id="playpause">play</button>
+        <button id="stop">stop</button>
+      </div>
+      <svg width="800" height="40" style="background-color: lightgray">
+        <rect width="4" height="40" id="test" style="fill: rgb(255, 0, 0)" />
+      </svg>
+      <svg
+        id="svg"
+        width="600"
+        height="200"
+        style="border: solid 1px gray"
+      ></svg>
+    </div>
   </body>
 </html>
