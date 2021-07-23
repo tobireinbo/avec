@@ -100,7 +100,6 @@ export default class KeyframeEngine {
                     keyframe.from.t,
                     keyframe.to.t
                   );
-                  console.log(step);
                   currentElement.setAttribute(kfb.prop, step + "");
                 }
               });
@@ -112,6 +111,17 @@ export default class KeyframeEngine {
   }
 
   private static keyframeFunction(
+    t: number,
+    v0: number,
+    v1: number,
+    t0: number,
+    t1: number
+  ) {
+    const rate = (v1 - v0) / (t1 - t0);
+    return Math.floor(rate * t + (v0 - t0 * rate));
+  }
+
+  private static easedKeyframeFunction(
     t: number,
     v0: number,
     v1: number,

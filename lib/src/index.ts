@@ -1,6 +1,6 @@
 import { KeyframeEngine, Timeline } from "./avec/avec";
 
-let timeline = new Timeline(8000);
+let timeline = new Timeline(8000, true, 1);
 let engine = new KeyframeEngine(timeline, document.getElementById("svg"));
 
 engine
@@ -22,11 +22,18 @@ engine
             prop: "x",
             keyframes: [
               { from: { t: 0, v: 0 }, to: { t: 1000, v: 100 } },
-              { from: { t: 1000, v: 100 }, to: { t: 2000, v: 100 } },
               { from: { t: 2000, v: 100 }, to: { t: 3000, v: 200 } },
               { from: { t: 3000, v: 200 }, to: { t: 4000, v: 100 } },
               { from: { t: 4000, v: 100 }, to: { t: 5000, v: 0 } },
               { from: { t: 5000, v: 0 }, to: { t: 6000, v: -50 } },
+              { from: { t: 6000, v: -50 }, to: { t: 7000, v: 0 } },
+            ],
+          },
+          {
+            prop: "y",
+            keyframes: [
+              { from: { t: 0, v: 0 }, to: { t: 1000, v: 100 } },
+              { from: { t: 1000, v: 100 }, to: { t: 7000, v: 0 } },
             ],
           },
         ],
@@ -34,13 +41,41 @@ engine
       {
         id: "rec2",
         type: "rect",
-        x: 0,
+        x: 200,
         y: 0,
-        backgroundColor: "rgba(0,255,0,0.3)",
+        backgroundColor: "rgb(0,255,0)",
         width: 100,
         height: 50,
         scale: 1,
         z: 1,
+        keyframes: [
+          {
+            prop: "x",
+            keyframes: [
+              {
+                from: { t: 0, v: 0 },
+                to: { t: 2000, v: 500 },
+              },
+              {
+                from: { t: 4000, v: 500 },
+                to: { t: 6000, v: 0 },
+              },
+            ],
+          },
+          {
+            prop: "y",
+            keyframes: [
+              {
+                from: { t: 2000, v: 0 },
+                to: { t: 4000, v: 550 },
+              },
+              {
+                from: { t: 6000, v: 550 },
+                to: { t: 8000, v: 0 },
+              },
+            ],
+          },
+        ],
       },
     ],
     x: 0,
@@ -76,6 +111,6 @@ document.getElementById("stop").addEventListener("click", () => {
 
 timeline.onUpdate((t) => {
   time.innerText = "time: " + t;
-  let step = Math.floor((t / timeline.end) * 800); //800 is width of container
-  bar.setAttribute("x", step + "");
+  let step = Math.floor((t / timeline.end) * 600); //800 is width of container
+  bar.setAttribute("width", step + "");
 });

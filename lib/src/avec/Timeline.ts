@@ -9,28 +9,35 @@ interface TimeListenerList {
 }
 
 export default class Timeline {
+  //options
+  private _loop: boolean;
+  private _speed: number;
+  private _length: number;
+
+  //time
   private _start: number;
   private _end: number;
-  private _length: number;
-  private _loop: boolean;
   private _current: number;
   private _playback: boolean;
+
+  //events
   private _timeListeners: TimeListenerList;
   private _playbackListener: (event: playbackEvents, time: number) => void;
 
+  //util
   private __timeToSubtract: number;
   private __animationId: number;
   private __timeTillFirstPlay: number;
   private __firstPlayed: boolean;
 
-  constructor(length: number) {
+  constructor(length: number, loop: boolean, speed: number) {
     this._start = 0;
     this._end = length;
     this._length = length;
-    this._loop = true;
+    this._loop = loop;
+    this._speed = speed;
     this._current = 0;
     this._playback = false;
-
     this.__timeToSubtract = 0;
     this.__firstPlayed = false;
     this.__timeTillFirstPlay = new Date().getTime();
@@ -79,11 +86,14 @@ export default class Timeline {
     this._playback = false;
   }
 
+  /**
+   * stops playback and goes back to beginning
+   */
   stop() {
     this._current = this._start;
     if (this._playbackListener) this._playbackListener("stop", this._current); //is paused
-    this._playback = false;
     if (this._timeListeners) this._triggerAllTimeListeners();
+    this._playback = false;
   }
 
   /**
@@ -112,7 +122,7 @@ export default class Timeline {
     if (this._current <= this._end) {
       if (this._playback) {
         let playbackTime = Math.floor(time - this.__timeToSubtract);
-        this._current = playbackTime;
+        this._current = playbackTime * this._speed;
         if (this._timeListeners) this._triggerAllTimeListeners();
       } else {
         this.__timeToSubtract = time - this._current;
