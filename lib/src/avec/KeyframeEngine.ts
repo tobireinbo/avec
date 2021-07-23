@@ -81,6 +81,8 @@ export default class KeyframeEngine {
     return this._currentLayer;
   }
 
+  //find keyframe to the left and right of t and calc the position
+  //Or create a math function that takes input t and returns current val
   play() {
     this._timeline.onUpdate((t) => {
       this._layers.forEach((layer) => {
@@ -91,26 +93,15 @@ export default class KeyframeEngine {
             el.keyframes.forEach((kfb) => {
               kfb.keyframes.forEach((keyframe, index) => {
                 if (t <= keyframe.to.t && t >= keyframe.from.t) {
-                  const deltaT = Math.abs(keyframe.to.t - keyframe.from.t);
-                  const deltaV = Math.abs(keyframe.to.v - keyframe.from.v);
-                  const rate = deltaV / deltaT;
-
-                  if (rate !== 0) {
-                    let lastTime = 0;
-                    if (index > 0) {
-                      lastTime = kfb.keyframes[index - 1].to.t;
-                    }
-                    //WIP: can only go forward with keyframe
-                    const timeDiff = t - lastTime;
-                    const step =
-                      keyframe.from.v < keyframe.to.v
-                        ? Math.floor(rate * timeDiff)
-                        : Math.floor(rate * (this._timeline.end - timeDiff));
-
-                    console.log(step);
-                    el = { ...el, [kfb.prop]: step };
-                    currentElement.setAttribute(kfb.prop, step + "");
-                  }
+                  const step = KeyframeEngine.keyframeFunction(
+                    t,
+                    keyframe.from.v,
+                    keyframe.to.v,
+                    keyframe.from.t,
+                    keyframe.to.t
+                  );
+                  console.log(step);
+                  currentElement.setAttribute(kfb.prop, step + "");
                 }
               });
             });
@@ -118,5 +109,16 @@ export default class KeyframeEngine {
         });
       });
     });
+  }
+
+  private static keyframeFunction(
+    t: number,
+    v0: number,
+    v1: number,
+    t0: number,
+    t1: number
+  ) {
+    const rate = (v1 - v0) / (t1 - t0);
+    return rate * t + (v0 - t0 * rate);
   }
 }
