@@ -1,4 +1,3 @@
-import TWEEN from "@tweenjs/tween.js";
 import Timeline from "./Timeline";
 
 interface Keyframe {
@@ -6,13 +5,8 @@ interface Keyframe {
   from: { t: number; v: number };
 }
 
-interface _Keyframe {
-  t: number;
-  v: number;
-}
-
 interface KeyframeBind {
-  prop: string;
+  prop: Props;
   keyframes: Array<Keyframe>;
 }
 
@@ -20,19 +14,21 @@ interface SharedProps {
   id: string;
   x: number;
   y: number;
-  scale: number;
   z: number;
   keyframes?: Array<KeyframeBind>;
   elements?: Array<Element>;
 }
 interface Element extends SharedProps {
-  type: string;
+  type: ElementTypes;
   backgroundColor?: string;
   width?: number;
   height?: number;
 }
 
 interface Layer extends SharedProps {}
+
+type ElementTypes = "rect";
+type Props = "x" | "y" | "z" | "transform_scale";
 
 export default class KeyframeEngine {
   private _layers: Array<Layer>;
@@ -81,8 +77,7 @@ export default class KeyframeEngine {
     return this._currentLayer;
   }
 
-  //find keyframe to the left and right of t and calc the position
-  //Or create a math function that takes input t and returns current val
+  //animates layer elments according to their keyframes
   play() {
     this._timeline.onUpdate((t) => {
       this._layers.forEach((layer) => {
@@ -93,14 +88,26 @@ export default class KeyframeEngine {
             el.keyframes.forEach((kfb) => {
               kfb.keyframes.forEach((keyframe, index) => {
                 if (t <= keyframe.to.t && t >= keyframe.from.t) {
-                  const step = KeyframeEngine.keyframeFunction(
+                  const step = KeyframeEngine.linearInterpolation(
                     t,
                     keyframe.from.v,
                     keyframe.to.v,
                     keyframe.from.t,
                     keyframe.to.t
                   );
-                  currentElement.setAttribute(kfb.prop, step + "");
+
+                  //TO DO: Instead of specific transformations,
+                  //use matrix transformations
+                  if (kfb.prop.includes("transform_")) {
+                    const transformAction = kfb.prop.replace("transform_", "");
+                    console.log(transformAction);
+                    currentElement.setAttribute(
+                      "transform",
+                      `${transformAction}(${step})`
+                    );
+                  } else {
+                    currentElement.setAttribute(kfb.prop, step + "");
+                  }
                 }
               });
             });
@@ -110,7 +117,10 @@ export default class KeyframeEngine {
     });
   }
 
-  private static keyframeFunction(
+  //implements simple linear function:
+  //f(t)= a * t + b
+  //a and b are determined via a System of linear equations
+  private static linearInterpolation(
     t: number,
     v0: number,
     v1: number,
@@ -118,17 +128,9 @@ export default class KeyframeEngine {
     t1: number
   ) {
     const rate = (v1 - v0) / (t1 - t0);
-    return Math.floor(rate * t + (v0 - t0 * rate));
-  }
-
-  private static easedKeyframeFunction(
-    t: number,
-    v0: number,
-    v1: number,
-    t0: number,
-    t1: number
-  ) {
-    const rate = (v1 - v0) / (t1 - t0);
+    //return Math.floor(rate * t + (v0 - t0 * rate));
     return rate * t + (v0 - t0 * rate);
   }
+
+  //TO DO: Add eased interpolation functions
 }

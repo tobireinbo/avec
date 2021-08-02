@@ -15,7 +15,6 @@ engine
         backgroundColor: "blue",
         width: 100,
         height: 50,
-        scale: 1,
         z: 1,
         keyframes: [
           {
@@ -36,6 +35,10 @@ engine
               { from: { t: 1000, v: 100 }, to: { t: 7000, v: 0 } },
             ],
           },
+          {
+            prop: "transform_scale",
+            keyframes: [{ from: { t: 0, v: 1 }, to: { t: 5000, v: 2 } }],
+          },
         ],
       },
       {
@@ -46,7 +49,6 @@ engine
         backgroundColor: "rgb(0,255,0)",
         width: 100,
         height: 50,
-        scale: 1,
         z: 1,
         keyframes: [
           {
@@ -80,7 +82,6 @@ engine
     ],
     x: 0,
     y: 0,
-    scale: 1,
     z: 1,
   })
   .play();
